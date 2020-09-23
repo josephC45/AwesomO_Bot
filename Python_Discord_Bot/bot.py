@@ -10,18 +10,6 @@ load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 client = commands.Bot(command_prefix = '!')
 
-'''
-    BOT TODOS
-        - add roles
-        - add additional error handling
-        - events to handle banning/kicking if certain criteria are met $$
-        - examples of commands $$
-        - Create gitignore file $$
-
-    COMPLETED:
-        $$ 
-'''
-
 #------------------------------------------Events-------------------------------------------
 # On Ready event prints to shell when bot comes online.
 @client.event
