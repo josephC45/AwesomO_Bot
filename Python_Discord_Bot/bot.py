@@ -1,5 +1,6 @@
 import os
 import discord
+import discord.utils as du
 from discord.ext import commands
 from discord.ext.commands import(MissingRequiredArgument,BadArgument)
 from pipenv.vendor.dotenv import load_dotenv
@@ -139,11 +140,27 @@ async def embed(ctx):
 
     await ctx.send(embed=embed)
 
+# creates roles for members of the guild. 
+@client.command(name='createrole', description='Creates a new role in the guild. (Ex: !createrole pcgamer)')
+async def createrole(ctx, name):
+    guild = ctx.guild
+    user = ctx.message.author
+
+    if ctx.author == ctx.guild.owner:
+        all_perm = discord.Permissions.all()
+        role_colour = discord.Colour.purple()
+
+        await guild.create_role(name=name, permissions=all_perm, colour=role_colour, mentionable=True)
+    
+    role = discord.utils.get(ctx.guild.roles, name=name)
+    await user.add_roles(role)
+
 # ----------------- Commands that regulate server members and are only handed by server owner -------------------------
 # kick command kicks the specified server member from the server
 @client.command(name='kick', description = 'Kicks specified member. (Ex: !kick @user)')
 async def kick(ctx, member : discord.Member, *, reason=None):
     if ctx.author == ctx.guild.owner:
+    #discord.ext.commands.has_role('Admin'):
         await member.kick(reason=reason)
         await ctx.send(f'{member} was kicked for being themselves.')
     else:
@@ -156,7 +173,7 @@ async def ban(ctx, member : discord.Member, reason=None):
         await member.ban(reason='Banned for being themselves.')
         await ctx.send(f'{member} was banned from the server for ruining the fun.')
     else:
-        await ctx.send(f'You do not have permission to ban {member} only the server owner does.')
+        await ctx.send(f'You do not have permission to ban {member} only individuals with the role of Admin')
 
 # unban command unbans the specified user from the server
 @client.command(name='unban', description='Unbans a user from the server. (!unban user#1234)')
