@@ -2,7 +2,7 @@ import os
 import discord
 import discord.utils as du
 from discord.ext import commands
-from discord.ext.commands import(MissingRequiredArgument,BadArgument)
+from discord.ext.commands import(has_permissions, MissingPermissions, MissingRequiredArgument,BadArgument)
 from pipenv.vendor.dotenv import load_dotenv
 import time
 import re
@@ -67,6 +67,8 @@ async def on_command_error(ctx,error):
     author_of_message = ctx.author.mention
     if isinstance(error,MissingRequiredArgument):
         await ctx.send(f'{author_of_message} make sure to include all required arguments.')
+    elif isinstance(error,MissingPermissions):
+        await ctx.send(f'{author_of_message} you do not have permission to run this command.')
 
 # -----------------Commands used for creating channels and categories----------------------
 # createcategory command creates a new category
@@ -157,25 +159,21 @@ async def createrole(ctx, name):
 
 # ----------------- Commands that regulate server members and are only handed by server owner -------------------------
 # kick command kicks the specified server member from the server
+@has_permissions(manage_roles=True, kick_members=True, ban_members=True)
 @client.command(name='kick', description = 'Kicks specified member. (Ex: !kick @user)')
 async def kick(ctx, member : discord.Member, *, reason=None):
-    if ctx.author == ctx.guild.owner:
-    #discord.ext.commands.has_role('Admin'):
-        await member.kick(reason=reason)
-        await ctx.send(f'{member} was kicked for being themselves.')
-    else:
-        await ctx.send(f'You do not have permission to kick {member} only the server owner does.')
-
+    await member.kick(reason=reason)
+    await ctx.send(f'{member} was kicked for being themselves.')
+    
 # ban command bans the specified user from the server
+@has_permissions(manage_roles=True, kick_members=True, ban_members=True)
 @client.command(name='ban', description = 'Bans member from the server. (Ex: !ban @user)')
 async def ban(ctx, member : discord.Member, reason=None):
-    if ctx.author == ctx.guild.owner:
-        await member.ban(reason='Banned for being themselves.')
-        await ctx.send(f'{member} was banned from the server for ruining the fun.')
-    else:
-        await ctx.send(f'You do not have permission to ban {member} only individuals with the role of Admin')
+    await member.ban(reason='Banned for being themselves.')
+    await ctx.send(f'{member} was banned from the server for ruining the fun.')
 
 # unban command unbans the specified user from the server
+@has_permissions(manage_roles=True, kick_members=True, ban_members=True)
 @client.command(name='unban', description='Unbans a user from the server. (!unban user#1234)')
 async def unban(ctx, *, member):
     author = ctx.author.mention
@@ -190,15 +188,14 @@ async def unban(ctx, *, member):
         await ctx.send(f'{author}, {member} has been unbanned from the server.')
 
 # botlogoff command closes the bot
+@has_permissions(manage_roles=True, administrator=True)
 @client.command(name='botlogoff', description = 'Logs the bot off (only runnable by server Admin).')
 async def botlogoff(ctx):
-    if ctx.author == ctx.guild.owner:
-        await ctx.send('Bot is shutting off in 10 seconds, plus the amount of time it takes to communicate with discords servers.')
-        time.sleep(10)
-        await client.close()
-        print("Bot Closed")  # This is optional, but it is there to tell you.
-    else:
-        await ctx.send('You do not have permission to shut me off...')
+    await ctx.send('Bot is shutting off in 10 seconds, plus the amount of time it takes to communicate with discords servers.')
+    time.sleep(10)
+    await client.close()
+    print("Bot Closed")  # This is optional, but it is there to tell you.
+
 
 # -------------------------------- Fun commands -----------------------------------
 # steamsales command returns steam sales page
