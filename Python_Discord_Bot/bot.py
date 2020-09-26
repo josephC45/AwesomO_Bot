@@ -159,21 +159,21 @@ async def createrole(ctx, name):
 
 # ----------------- Commands that regulate server members and are only handed by server owner -------------------------
 # kick command kicks the specified server member from the server
-@has_permissions(manage_roles=True, kick_members=True, ban_members=True)
+@has_permissions(administrator=True)
 @client.command(name='kick', description = 'Kicks specified member. (Ex: !kick @user)')
 async def kick(ctx, member : discord.Member, *, reason=None):
     await member.kick(reason=reason)
     await ctx.send(f'{member} was kicked for being themselves.')
     
 # ban command bans the specified user from the server
-@has_permissions(manage_roles=True, kick_members=True, ban_members=True)
+@has_permissions(administrator=True)
 @client.command(name='ban', description = 'Bans member from the server. (Ex: !ban @user)')
 async def ban(ctx, member : discord.Member, reason=None):
     await member.ban(reason='Banned for being themselves.')
     await ctx.send(f'{member} was banned from the server for ruining the fun.')
 
 # unban command unbans the specified user from the server
-@has_permissions(manage_roles=True, kick_members=True, ban_members=True)
+@has_permissions(administrator=True)
 @client.command(name='unban', description='Unbans a user from the server. (!unban user#1234)')
 async def unban(ctx, *, member):
     author = ctx.author.mention
@@ -188,7 +188,7 @@ async def unban(ctx, *, member):
         await ctx.send(f'{author}, {member} has been unbanned from the server.')
 
 # botlogoff command closes the bot
-@has_permissions(manage_roles=True, administrator=True)
+@has_permissions(administrator=True)
 @client.command(name='botlogoff', description = 'Logs the bot off (only runnable by server Admin).')
 async def botlogoff(ctx):
     await ctx.send('Bot is shutting off in 10 seconds, plus the amount of time it takes to communicate with discords servers.')
