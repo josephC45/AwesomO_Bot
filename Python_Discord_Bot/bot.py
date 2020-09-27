@@ -1,32 +1,40 @@
 import os
 import discord
+import logging
 import discord.utils as du
 from discord.ext import commands
-from discord.ext.commands import(has_permissions, MissingPermissions, MissingRequiredArgument,BadArgument)
+from discord.ext.commands import(has_permissions, MissingPermissions, MissingRequiredArgument, BadArgument)
 from pipenv.vendor.dotenv import load_dotenv
 import time
 import re
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
+
+logger = logging.getLogger('awesomo')
+logger.setLevel(logging.INFO)
+handler = logging.FileHandler(filename='awesomo.log', encoding='utf-8', mode='w')
+handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s: %(message)s'))
+logger.addHandler(handler)
+
 client = commands.Bot(command_prefix = '!')
+
 
 #------------------------------------------Events-------------------------------------------
 # On Ready event prints to shell when bot comes online.
 @client.event
 async def on_ready():
-    print("Bot is ready")
-    print("----------------------------------------------------------")
+    logger.info("Bot is ready")
+    print('Bot is online')
 
 # Used to identify inappropriate messages in chat and remove them.
 inappropriate_words = [
-    
-    
+
 ]
 
 def member_strike(dict,author):
     if dict['Strike Number'] > 0:
-        print (f'You need to kick {author} from the guild they have exceeded 1 inappropriate words.')
+        logger.warning(f'You need to kick {author} from the guild they have exceeded 1 inappropriate words.')
 
 # Message event monitors chat for the inappropriate words defined above, then deletes them.
 @client.event
@@ -46,7 +54,7 @@ async def on_message(message):
             deleted_message = message.content
             author = message.author
 
-            print(f'{author} said, "{deleted_message}".')
+            logger.info(f'{author} said, "{deleted_message}".')
             member_strike(dict,author)
 
             await message.delete()
@@ -56,10 +64,9 @@ async def on_message(message):
 @client.event
 async def on_member_update(before,after):
     if str(after.status) == "online":
-        print("{} has come {}.".format(after.name,after.status))
+        logger.info("{} has come {}.".format(after.name,after.status))
     elif str(after.status) == "offline":
-        print("{} has gone {}.".format(after.name,after.status))
-    print("---------------------------------------------------------------")
+        logger.info("{} has gone {}.".format(after.name,after.status))
 
 # Error handling event
 @client.event
@@ -76,27 +83,29 @@ async def on_command_error(ctx,error):
 async def createcategory(ctx, category_name):
     guild = ctx.guild 
     await guild.create_category(category_name)
-    print(f'Category, {category_name} was created.')
+    logger.info(f'Category, {category_name} was created.')
     print('---------------------------------------------------------------')
     
 # createtextchannel command creates a new text channel withing an existing category
 @client.command(name='createtextchannel', description = 'Creates a text channel within a specified category (Ex: !createtextchannel categoryname txtchannelname).')
 async def createchannel(ctx, category_name, channel_name):
     guild = ctx.guild
+    author = ctx.author
     existing_channel = discord.utils.get(guild.channels, name=channel_name)
     category = discord.utils.get(guild.categories, name=category_name)
     if not existing_channel:
-        print(f'Creating a new text channel: {channel_name} in category, {category_name}.')
+        logger.info(f'{author} created a new text channel: {channel_name} in category, {category_name}.')
         await guild.create_text_channel(channel_name, category = category)
 
 # createvoicechannel command creates a new voice channel within an existing channel
 @client.command(name='createvoicechannel', description = 'Creates a voice channel within a specified category (Ex: !createvoicechannel categoryname voicechannelname).')
 async def createvoicechannel(ctx,category_name, channel_name):
     guild = ctx.guild
+    author = ctx.author
     existing_channel = discord.utils.get(guild.channels, name=channel_name)
     category = discord.utils.get(guild.categories, name=category_name)
     if not existing_channel:
-        print(f'Creating a new voice channel: {channel_name} in category, {category_name}.')
+        logger.info(f'{author} created a new voice channel: {channel_name} in category, {category_name}.')
         await guild.create_voice_channel(channel_name, category = category)
 
 # ---------------------Utility commands--------------------------------
@@ -106,7 +115,7 @@ async def clear(ctx, number_amount = 100):
     cast_number = int(number_amount)
     actual_number = cast_number + 1
     await ctx.channel.purge(limit = actual_number)
-    print(f'{number_amount} message(s) were removed from chat.')
+    logger.info(f'{number_amount} message(s) were removed from chat.')
 
 # commands command returns the available custom commands and their descriptions
 @client.command(name='commands', description='Returns all commands available. (Ex: !commands)')
@@ -119,6 +128,7 @@ async def commands(ctx):
     await ctx.send(helptext)
 
 # newnickname command creates a new nickname for the user specified
+@has_permissions(administrator=True)
 @client.command(name='newnickname', description = 'Gives new nickname to specified member. (Ex: !newnickname @username nickname)')
 async def newnickname(ctx, member : discord.Member, nick):
     await member.edit(nick=nick)
@@ -164,6 +174,7 @@ async def createrole(ctx, name):
 async def kick(ctx, member : discord.Member, *, reason=None):
     await member.kick(reason=reason)
     await ctx.send(f'{member} was kicked for being themselves.')
+    logger.info(f'{member} was kicked.')
     
 # ban command bans the specified user from the server
 @has_permissions(administrator=True)
@@ -171,6 +182,7 @@ async def kick(ctx, member : discord.Member, *, reason=None):
 async def ban(ctx, member : discord.Member, reason=None):
     await member.ban(reason='Banned for being themselves.')
     await ctx.send(f'{member} was banned from the server for ruining the fun.')
+    logger.info(f'{member} was banned from the server.')
 
 # unban command unbans the specified user from the server
 @has_permissions(administrator=True)
@@ -186,16 +198,20 @@ async def unban(ctx, *, member):
     if (user.name, user.discriminator) == (member_name, member_discriminator):
         await ctx.guild.unban(user)
         await ctx.send(f'{author}, {member} has been unbanned from the server.')
+        logger.info(f'{member} unbanned.')
 
 # botlogoff command closes the bot
 @has_permissions(administrator=True)
 @client.command(name='botlogoff', description = 'Logs the bot off (only runnable by server Admin).')
 async def botlogoff(ctx):
-    await ctx.send('Bot is shutting off in 10 seconds, plus the amount of time it takes to communicate with discords servers.')
-    time.sleep(10)
-    await client.close()
-    print("Bot Closed")  # This is optional, but it is there to tell you.
-
+    author = ctx.author.mention
+    try:
+        await ctx.send(f'{author} logged me out. See ya later!')
+        await client.logout()
+        logger.info('Bot has logged off.')
+    except Exception:
+        logger.warning("Error occurred when running botlogoff command. l.205", exc_info=True)
+        
 
 # -------------------------------- Fun commands -----------------------------------
 # steamsales command returns steam sales page
