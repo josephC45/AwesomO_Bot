@@ -25,7 +25,6 @@ client = commands.Bot(command_prefix = '!')
 @client.event
 async def on_ready():
     logger.info("Bot is ready")
-    print('Bot is online')
 
 # Used to identify inappropriate messages in chat and remove them.
 inappropriate_words = [
