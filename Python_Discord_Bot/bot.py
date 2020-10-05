@@ -3,7 +3,7 @@ import discord
 import logging
 import discord.utils as du
 from discord.ext import commands
-from discord.ext.commands import(has_permissions, MissingPermissions, MissingRequiredArgument, BadArgument)
+from discord.ext.commands import(has_permissions, MissingPermissions, MissingRole, MissingRequiredArgument, BadArgument, CommandInvokeError, TooManyArguments)
 from pipenv.vendor.dotenv import load_dotenv
 import time
 import re
@@ -75,6 +75,12 @@ async def on_command_error(ctx,error):
         await ctx.send(f'{author_of_message} make sure to include all required arguments.')
     elif isinstance(error,MissingPermissions):
         await ctx.send(f'{author_of_message} you do not have permission to run this command.')
+    elif isinstance(error,MissingRole):
+        await ctx.send(f'{author_of_message} you do not have the required role to run this command.')
+    elif isinstance(error,CommandInvokeError):
+        await ctx.send(f'{author_of_message} bot has encountered a problem with the command given. Contact the bot owner.')
+    elif isinstance(error,TooManyArguments):
+        await ctx.send(f'{author_of_message} you have provided too many arguments for the given command. Run "!commands" to see the syntax of the available commands.')
 
 # -----------------Commands used for creating channels and categories----------------------
 # createcategory command creates a new category
