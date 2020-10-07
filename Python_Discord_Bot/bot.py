@@ -157,9 +157,9 @@ async def embed(ctx):
 
     await ctx.send(embed=embed)
 
-# creates roles for members of the guild. 
-@client.command(name='createrole', description='Creates a new role in the guild. (Ex: !createrole pcgamer)')
-async def createrole(ctx, name):
+# creates role for admin of the guild. 
+@client.command(name='createadminrole', description='Creates a new role in the guild. (admin only)')
+async def createadminrole(ctx, name):
     guild = ctx.guild
     user = ctx.message.author
 
@@ -171,6 +171,25 @@ async def createrole(ctx, name):
     
     role = discord.utils.get(ctx.guild.roles, name=name)
     await user.add_roles(role)
+
+# creates a general role having text permissions to the server.
+@has_permissions(administrator=True)
+@client.command(name='creategeneralrole', description='Creates a general role in the guild having text permissions. (admin only)')
+async def creategeneralrole(ctx, name):
+    guild = ctx.guild
+
+    message_permissions = discord.Permissions.text()
+    role_colour = discord.Colour.dark_gray()
+
+    await guild.create_role(name=name, permissions=message_permissions, colour=role_colour, mentionable=True)
+
+# creates roles for members of the guild.
+@has_permissions(administrator=True)
+@client.command(name='assignrole', description='Creates a new role in the guild. (admin only)')
+async def assignrole(ctx, member : discord.Member, role : discord.Role):
+    await member.add_roles(role)
+    logger.info(f'{member} now has the role of, {role}')
+
 
 # ----------------- Commands that regulate server members and are only handed by server owner -------------------------
 # kick command kicks the specified server member from the server
