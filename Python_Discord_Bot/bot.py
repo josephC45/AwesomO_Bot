@@ -172,16 +172,27 @@ async def createadminrole(ctx, name):
     role = discord.utils.get(ctx.guild.roles, name=name)
     await user.add_roles(role)
 
-# creates a general role having text permissions to the server.
+# creates a general role having text permissions on the server.
 @has_permissions(administrator=True)
-@client.command(name='creategeneralrole', description='Creates a general role in the guild having text permissions. (admin only)')
-async def creategeneralrole(ctx, name):
+@client.command(name='creategeneraltextrole', description='Creates a general role in the guild having text permissions. (admin only)')
+async def creategeneraltextrole(ctx, name):
     guild = ctx.guild
 
     message_permissions = discord.Permissions.text()
     role_colour = discord.Colour.dark_gray()
 
-    await guild.create_role(name=name, permissions=message_permissions, colour=role_colour, mentionable=True)
+    await guild.create_role(name=name, permissions=message_permissions, colour=role_colour, mentionable=False)
+
+# creates a general role having voice permissions on the server.
+@has_permissions(administrator=True)
+@client.command(name='creategeneralvoicerole', description='Creates a general role in the guild having voice permissions. (admin only)')
+async def creategeneralvoicerole(ctx, name):
+    guild = ctx.guild
+
+    voice_permissions = discord.Permissions.voice()
+    role_colour = discord.Colour.darker_gray()
+
+    await guild.create_role(name=name, permissions=voice_permissions, colour=role_colour, mentionable=False)
 
 # creates roles for members of the guild.
 @has_permissions(administrator=True)
