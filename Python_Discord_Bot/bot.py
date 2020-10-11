@@ -28,35 +28,38 @@ async def on_ready():
 
 # Used to identify inappropriate messages in chat and remove them.
 inappropriate_words = [
-
+    
 ]
 
-def member_strike(dict,author):
-    if dict['Strike Number'] > 0:
+dict = {
+    'Author': 'author',
+    'Strike Number': 0
+}
+
+
+def member_strike(strikes,author):
+    if strikes >= 1:
         logger.warning(f'You need to kick {author} from the guild they have exceeded 1 inappropriate words.')
+    dict['Strike Number'] = 0
 
 # Message event monitors chat for the inappropriate words defined above, then deletes them.
 @client.event
 async def on_message(message):
-    
     for slang in inappropriate_words:
         altered_slang = re.compile(re.escape(slang), re.IGNORECASE)
         message_containing_slang = altered_slang.sub(slang,message.content)
-        if slang in message_containing_slang:
-            counter = 0
-            dict = {
-                'Author': message.author,
-                'Strike Number': counter
-            }
-            dict['Strike Number'] += 1
-            counter = dict['Strike Number']
+        
+        if slang in message_containing_slang: 
             deleted_message = message.content
             author = message.author
+            dict['Author'] = author
+            dict['Strike Number'] += 1
+            strikes = dict.get('Strike Number')
 
-            logger.info(f'{author} said, "{deleted_message}".')
-            member_strike(dict,author)
-
+            logger.info(f'{author} said, "{deleted_message}". Strike #: {strikes}')
             await message.delete()
+            member_strike(strikes,author)
+            
     await client.process_commands(message)
 
 # Member status event (prints to shell when a member has come online or gone offline)
@@ -244,8 +247,8 @@ async def botlogoff(ctx):
         await ctx.send(f'{author} logged me out. See ya later!')
         await client.logout()
         logger.info('Bot has logged off.')
-    except Exception:
-        logger.warning("Error occurred when running botlogoff command. l.205", exc_info=True)
+    except RuntimeError:
+        logger.warning("Error occurred when running botlogoff command.", exc_info=True)
         
 
 # -------------------------------- Fun commands -----------------------------------
